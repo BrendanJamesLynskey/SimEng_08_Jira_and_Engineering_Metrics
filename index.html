@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Engineering Toolkit 08 — Jira and Engineering Metrics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=Geist+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1c1815;
+            --bg-card: #231e1a;
+            --bg-code: #2b2520;
+            --text-primary: #efe8dc;
+            --text-secondary: #a2978b;
+            --accent: #aabd59;
+            --accent-dim: #aabd5944;
+            --accent-glow: #aabd5933;
+            --border: #3a322b;
+            --font-display: 'Bricolage Grotesque', sans-serif;
+            --font-mono: 'Geist Mono', 'Geist Mono', monospace;
+            --font-body: 'Instrument Sans', sans-serif;
+            --max-width: 900px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .series-label {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 .accent {
+            color: var(--accent);
+        }
+
+        .hero .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        /* ── Tag Pills ── */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+            white-space: nowrap;
+        }
+
+        /* ── Pipeline Flow Bar ── */
+        .pipeline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            max-width: var(--max-width);
+        }
+
+        .pipeline-step {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .pipeline-arrow {
+            color: var(--accent);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        /* ── Slides ── */
+        .slide {
+            min-height: 100vh;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide-number {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--accent-dim);
+            position: absolute;
+            top: 2rem;
+            right: 1.5rem;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .slide h2 {
+            font-family: var(--font-display);
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            line-height: 1.25;
+        }
+
+        .slide h3 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .slide p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .slide p strong {
+            color: var(--text-primary);
+        }
+
+        .slide ul, .slide ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .slide li {
+            margin-bottom: 0.4rem;
+        }
+
+        .slide li strong {
+            color: var(--text-primary);
+        }
+
+        /* ── Code Blocks ── */
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(170,189,89,0.08);
+            padding: 0.4rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-block pre {
+            margin: 0;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #dad1c5;
+        }
+
+        /* Syntax highlighting (manual) */
+        .kw { color: #de805a; }
+        .fn { color: #d7bbdf; }
+        .str { color: #bcdbd4; }
+        .cm { color: #a2978b; font-style: italic; }
+        .num { color: #97cdc6; }
+        .type { color: #e3b174; }
+        .dir { color: #de805a; }
+        .mac { color: #e3b174; }
+
+        /* ── Tables ── */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--bg-code);
+            color: var(--accent);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-display);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background: rgba(35,30,26,0.5);
+        }
+
+        /* ── Diagrams ── */
+        .diagram-flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .diagram-box {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .diagram-box.accent {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(170,189,89,0.08);
+        }
+
+        .diagram-box.dim {
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .diagram-arrow {
+            color: var(--accent);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* Vertical flow diagrams */
+        .diagram-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .diagram-vertical .diagram-arrow {
+            font-size: 1.1rem;
+        }
+
+        /* Nested hierarchy diagram */
+        .hierarchy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .hierarchy-level {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .hierarchy-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .hierarchy-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .hierarchy-item {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .hierarchy-item.accent {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(170,189,89,0.08);
+        }
+
+        /* Grid diagram */
+        .diagram-grid {
+            display: grid;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .diagram-grid.cols-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .diagram-grid.cols-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .diagram-panel {
+            padding: 1rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .diagram-panel.accent-border {
+            border-left: 3px solid var(--accent);
+        }
+
+        .diagram-panel h4 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .diagram-panel p, .diagram-panel ul {
+            font-size: 0.85rem;
+        }
+
+        /* ── Callout Boxes ── */
+        .callout {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+        }
+
+        .callout p {
+            margin-bottom: 0;
+        }
+
+        .callout .callout-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.3rem;
+        }
+
+        /* ── Tier Visual ── */
+        .tier-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .tier-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tier-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .tier-fill {
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            white-space: nowrap;
+            transition: width 0.6s ease;
+        }
+
+        .tier-cost {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            min-width: 70px;
+        }
+
+        /* ── Contents list ── */
+        .contents-list {
+            list-style: none;
+            padding-left: 0;
+            counter-reset: contents;
+        }
+
+        .contents-list li {
+            counter-increment: contents;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contents-list li:last-child {
+            border-bottom: none;
+        }
+
+        .contents-list li::before {
+            content: counter(contents, decimal-leading-zero);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            min-width: 2rem;
+        }
+
+        .contents-list a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .contents-list a:hover {
+            color: var(--accent);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .slide {
+                padding: 3rem 1rem;
+                min-height: auto;
+            }
+
+            .slide-number {
+                font-size: 3rem;
+                top: 1.5rem;
+                right: 1rem;
+            }
+
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+
+            .diagram-grid.cols-2,
+            .diagram-grid.cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline {
+                gap: 0.15rem;
+            }
+
+            .pipeline-step {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            table {
+                font-size: 0.78rem;
+            }
+
+            .tier-label {
+                min-width: 60px;
+                font-size: 0.65rem;
+            }
+
+            .tier-fill {
+                font-size: 0.6rem;
+                height: 26px;
+            }
+        }
+
+        /* ── Interactive controls (added for Local LLM series) ── */
+        .control-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+        }
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .control-row label {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            min-width: 180px;
+        }
+        .control-row input[type="range"] {
+            flex: 1;
+            min-width: 160px;
+            accent-color: var(--accent);
+        }
+        .control-row input[type="number"],
+        .control-row select {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        .control-row .val {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            min-width: 80px;
+            text-align: right;
+        }
+        .btn {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 0.4rem 0.9rem;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .btn:hover { background: rgba(170,189,89,0.2); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn.secondary {
+            background: var(--bg-code);
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+        .result-box {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            margin-top: 0.75rem;
+        }
+        .result-box .line-label { color: var(--text-secondary); }
+        .result-box .line-val   { color: var(--accent); font-weight: 600; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .metric {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            text-align: center;
+        }
+        .metric .metric-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .metric .metric-value {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-top: 0.2rem;
+        }
+
+        /* Canvas / SVG containers */
+        .canvas-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+        .canvas-wrap canvas,
+        .canvas-wrap svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        /* Small inline badge */
+        .badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: middle;
+            margin-left: 0.3rem;
+        }
+        .badge.ok    { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .badge.warn  { border-color: #e3b174; color: #e3b174; background: rgba(227,177,116,0.08); }
+        .badge.bad   { border-color: #de805a; color: #de805a; background: rgba(222,128,90,0.08); }
+
+
+        /* ── LLM Inference Simulators additions ── */
+        .canvas-wrap canvas { image-rendering: auto; display: block; width: 100%; height: auto; }
+        .canvas-wrap svg { max-width: 100%; height: auto; }
+        .ladder { display: grid; gap: 0.4rem; margin: 1.25rem 0; }
+        .ladder-row {
+            display: grid; grid-template-columns: 11rem 1fr 7.5rem; gap: 0.75rem; align-items: center;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.55rem 0.85rem; font-size: 0.88rem;
+        }
+        .ladder-row .rung { font-family: var(--font-display); font-weight: 600; color: var(--accent); }
+        .ladder-row .speed { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); text-align: right; }
+        .res-list { list-style: none; padding: 0; margin: 0.75rem 0; }
+        .res-list li { padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+        .res-list li:last-child { border-bottom: none; }
+        .res-list .what { color: var(--text-secondary); display: block; font-size: 0.86rem; margin-top: 0.15rem; }
+        .res-list a { color: var(--accent); text-decoration: none; }
+        .res-list a:hover { text-decoration: underline; }
+        .qa { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin: 0.6rem 0; padding: 0.2rem 1rem; }
+        .qa summary { cursor: pointer; padding: 0.6rem 0; font-weight: 600; }
+        .qa p, .qa ul { margin-bottom: 0.75rem; font-size: 0.92rem; }
+        .sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.4rem 1.25rem; }
+        .chart-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        .chart-title { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .slide a { color: var(--accent); }
+        @media (max-width: 640px) {
+            .ladder-row { grid-template-columns: 1fr; gap: 0.2rem; }
+            .ladder-row .speed { text-align: left; }
+        }
+        .concepts { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.75rem 1rem; margin-top: 1.25rem; font-size: 0.88rem; }
+        .concepts p { margin: 0 0 0.4rem; color: var(--text-secondary); }
+        .concepts .chips { display: flex; flex-wrap: wrap; gap: 0.35rem 0.5rem; }
+        .concepts .chips a { border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.6rem; text-decoration: none; font-size: 0.82rem; }
+        .concepts .chips a:hover { border-color: var(--accent); }
+        /* ── Simulation Engineering Toolkit additions ── */
+        .code-header a.src-link { color: var(--text-secondary); text-decoration: none; float: right; }
+        .code-header a.src-link:hover { color: var(--accent); text-decoration: underline; }
+        p.src { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); margin: -0.75rem 0 1rem; }
+        p.src a { color: var(--text-secondary); }
+        .control-panel select, .control-panel input[type=number] { background: var(--bg-code); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.4rem; font-family: var(--font-mono); font-size: 0.8rem; }
+        .mut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.4rem 1rem; font-size: 0.85rem; }
+        .mut-grid label { display: flex; gap: 0.5rem; align-items: baseline; cursor: pointer; }
+        .mut-list { font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.7; }
+        .mut-list .killed { color: var(--accent); }
+        .mut-list .survived { color: #de805a; }
+        .hero { overflow: hidden; }   /* the 600px glow must not widen the page on phones */
+        .chart-pair > *, .diagram-grid > *, .sim-grid > * { min-width: 0; }   /* let wide code scroll inside its column */
+        .slide p code, .slide li code, .slide td code { overflow-wrap: anywhere; }
+        .control-panel select { max-width: 100%; }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="series-label">Simulation Engineering Toolkit &mdash; Presentation 08</div>
+    <h1><span class="accent">Jira</span> and Engineering Metrics</h1>
+    <p class="subtitle">The tracker as a simulation team's data model: issue types, workflows and status categories, versions, sprints and Kanban, JQL with worked queries and its traps, Git and Jenkins integration, traceability from requirement to build, the metrics worth reporting, flow metrics and Little's law from a workflow history, and evidence for sign-off.</p>
+
+    <div class="tags">
+        <span class="tag">Issue model</span>
+        <span class="tag">Workflows</span>
+        <span class="tag">JQL</span>
+        <span class="tag">Smart commits</span>
+        <span class="tag">Flow metrics</span>
+        <span class="tag">Sign-off</span>
+    </div>
+
+    <div class="pipeline">
+        <span class="pipeline-step">Capture</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Plan</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Query</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Link</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Measure</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Sign off</span>
+    </div>
+</header>
+
+<section class="slide" id="slide-00">
+    <div class="slide-number">00</div>
+    <h2>Topics We'll Cover</h2>
+    <ul class="contents-list">
+        <li><a href="#slide-01">Why a Simulation Team Needs a Tracker</a></li>
+        <li><a href="#slide-02">The Issue Model</a></li>
+        <li><a href="#slide-03">Workflows, Transitions and Status Categories</a></li>
+        <li><a href="#slide-04">Versions, Sprints and Kanban</a></li>
+        <li><a href="#slide-05">JQL: the Query Language</a></li>
+        <li><a href="#slide-06">Interactive: Worked JQL Queries</a></li>
+        <li><a href="#slide-07">Git and Jenkins Integration</a></li>
+        <li><a href="#slide-08">Traceability: Requirement, Work Item, Test, Build</a></li>
+        <li><a href="#slide-09">The Metrics a Simulation Team Should Report</a></li>
+        <li><a href="#slide-10">Interactive: Flow Metrics From the Workflow History</a></li>
+        <li><a href="#slide-11">Showing Progress to Sign-Off</a></li>
+        <li><a href="#slide-12">What to Take Away</a></li>
+    </ul>
+    <div class="concepts">
+        <p><strong>Concepts used here, and where they are explained.</strong> Each links to a glossary entry: this <a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#glossary">series glossary</a>, or the glossaries of LLM Inference Simulators and FHE Accelerator Simulators for concepts those series already explain.</p>
+        <div class="chips"><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-issuemodel" title="Epics group stories, tasks and bugs, which may have sub-tasks; each item has fields (status, assignee, fix version, sprint, components, labels), links and a full change history.">The issue model</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-workflow" title="A workflow is a state machine of statuses and allowed transitions; every status belongs to one of three categories (To Do, In Progress, Done) that queries and boards can rely on.">Workflows and status categories</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-fixversion" title="A fix version names the release that will contain a change; Scrum plans work in fixed sprints, Kanban pulls it continuously under WIP limits.">Versions, sprints and Kanban</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-jql" title="Jira Query Language: clauses of field, operator and value joined by AND, OR and NOT, with functions and ORDER BY. != does not match empty fields; WAS and CHANGED search the history of six fields.">JQL</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-smartcommits" title="Work-item keys in branch names, commit messages or pull-request titles link the development work to the item; smart commits can also comment, log time and run a transition.">Smart commits and the development panel</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-traceability" title="The links from each requirement to the tests and evidence that verify it, checked in both directions; generated from the test run, a missing link is a visible gap.">Traceability matrix</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-flowmetrics" title="Flow metrics computed from the workflow history: how long items take from start to done (as percentiles), how many finish per week, how many are in progress, and which have been in progress too long.">Cycle time, throughput and WIP</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-cfd" title="The number of items in each status category on each day, stacked; widening bands show work accumulating in a stage.">Cumulative flow diagram</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-little" title="L = λW: mean population equals arrival rate times mean time in system, for any stable system. With the utilisation and forced-flow laws it gives free consistency checks on a simulator&#x27;s probes.">Little's law and the operational laws</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-percentiles" title="Report p50, p90 and p99, not means, and plot the fraction of samples slower than x on log-log axes, where tails show. Say which population (all tokens or per request), and use streaming sketches when samples are many.">Percentiles and tail-latency CCDFs</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-goodhart" title="A measure that becomes a target stops being a good measure; prefer metrics that tools compute from records, and report distributions rather than single numbers.">Goodhart's law</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-ci" title="Run tests on every push and sweeps nightly (Jenkins or similar); fail the build if golden metrics drift; track correlation error, coverage, simulator speed and test health as engineering metrics.">CI, golden metrics and engineering metrics</a></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-01">
+    <div class="slide-number">01</div>
+    <h2>Why a Simulation Team Needs a Tracker</h2>
+    <p>A simulator is a product with customers: architects asking "what if", verification engineers comparing it with RTL, management asking whether the next chip meets its targets. The work arrives as model features, validation tasks, bugs found by comparison with silicon or RTL, and requests for studies. A tracker such as Jira turns that into a queryable record: what is being done, by whom, for which release, what is blocked, and what evidence closed it.</p>
+    <div class="callout">
+        <div class="callout-label">How this deck is built</div>
+        <p>No Jira site was used. The JQL is checked against <a href="https://support.atlassian.com/jira-software-cloud/docs/use-advanced-search-with-jira-query-language-jql/">Atlassian's documentation</a>, and there are no screenshots of the Jira interface. The worked queries and metrics run on an <strong>example issue log</strong> for a fictional simulator team, generated from a fixed seed and labelled as such, through a small evaluator for the subset of JQL used here (<a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/tree/main/snippets/t08">snippets/t08</a>, with its tests).</p>
+    </div>
+    <p>Jira changes quickly, and Atlassian is renaming things: its documentation now says <em>work item</em> for issue and <em>space</em> for project, and notes that "there are no changes to existing JQL queries". This deck uses the established terms, which is what JQL still accepts.</p>
+</section>
+
+<section class="slide" id="slide-02">
+    <div class="slide-number">02</div>
+    <h2>The Issue Model</h2>
+    <div class="canvas-wrap">
+        <svg viewBox="0 0 720 200" width="720" height="200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Issue hierarchy: an epic contains stories, tasks and bugs, which may have sub-tasks; issues carry fields such as status, assignee, fix version, sprint, components and labels">
+            <style>
+                .j1 { fill: #2b2520; stroke: #aabd59; stroke-width: 1.5; }
+                .j2 { fill: #2b2520; stroke: #e3b174; stroke-width: 1.3; }
+                .j3 { fill: #2b2520; stroke: #97cdc6; stroke-width: 1.2; }
+                .jt { fill: #efe8dc; font-family: 'Geist Mono', monospace; font-size: 11px; }
+                .jd { fill: #a2978b; font-family: 'Geist Mono', monospace; font-size: 10px; }
+                .jl { stroke: #a2978b; stroke-width: 1.2; fill: none; }
+            </style>
+            <rect x="200" y="8" width="240" height="40" rx="6" class="j1"/><text x="212" y="26" class="jt">Epic  SIM-1</text><text x="212" y="41" class="jd">Memory model v2</text>
+            <rect x="20" y="78" width="160" height="40" rx="6" class="j2"/><text x="32" y="96" class="jt">Story</text><text x="32" y="111" class="jd">FR-FCFS scheduler</text>
+            <rect x="200" y="78" width="160" height="40" rx="6" class="j2"/><text x="212" y="96" class="jt">Task</text><text x="212" y="111" class="jd">Cross-check DRAMsim3</text>
+            <rect x="380" y="78" width="160" height="40" rx="6" class="j2"/><text x="392" y="96" class="jt">Bug</text><text x="392" y="111" class="jd">tFAW across ranks</text>
+            <rect x="20" y="148" width="160" height="40" rx="6" class="j3"/><text x="32" y="166" class="jt">Sub-task</text><text x="32" y="181" class="jd">golden test</text>
+            <path d="M260,48 L100,78 M320,48 L280,78 M380,48 L460,78 M100,118 L100,148" class="jl"/>
+            <text x="560" y="92" class="jd">every item has:</text><text x="560" y="108" class="jd">type, status,</text><text x="560" y="122" class="jd">assignee, priority,</text><text x="560" y="136" class="jd">fix version, sprint,</text><text x="560" y="150" class="jd">component, labels,</text><text x="560" y="164" class="jd">links, history</text>
+        </svg>
+    </div>
+    <ul>
+        <li><strong>Epics</strong> group work towards an outcome ("memory model v2"). Below them, <strong>stories</strong> are user-visible capabilities, <strong>tasks</strong> are work without a user story, <strong>bugs</strong> are defects. <strong>Sub-tasks</strong> split any of them. Children point at their epic through the <code>parent</code> field, which replaced the older "Epic Link" field in Jira Cloud.</li>
+        <li><strong>Fields</strong> make it searchable: status, assignee, priority, <em>fix version</em> (the release that will contain the change), sprint, component (part of the system), labels (cross-cutting tags such as <code>validation</code> or <code>regression</code>).</li>
+        <li><strong>History</strong> records every change of every field, with who and when. That is what makes flow metrics and the <code>WAS</code> and <code>CHANGED</code> operators possible.</li>
+        <li><strong>Links</strong> join items ("blocks", "relates to"), and are how requirements and tests can be traced (slide 08).</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-03">
+    <div class="slide-number">03</div>
+    <h2>Workflows, Transitions and Status Categories</h2>
+    <div class="canvas-wrap">
+        <svg viewBox="0 0 720 150" width="720" height="150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Workflow: To Do to In Progress to In Review to Done, with a transition back from In Review to In Progress; status categories To Do, In Progress and Done">
+            <style>
+                .w1 { fill: #2b2520; stroke: #a2978b; stroke-width: 1.5; }
+                .w2 { fill: #2b2520; stroke: #e3b174; stroke-width: 1.5; }
+                .w3 { fill: #2b2520; stroke: #aabd59; stroke-width: 1.5; }
+                .wt { fill: #efe8dc; font-family: 'Geist Mono', monospace; font-size: 11px; }
+                .wd { fill: #a2978b; font-family: 'Geist Mono', monospace; font-size: 10px; }
+                .wa { stroke: #a2978b; stroke-width: 1.3; fill: none; marker-end: url(#wa1); }
+                .wb { stroke: #de805a; stroke-width: 1.3; fill: none; marker-end: url(#wa2); }
+            </style>
+            <defs><marker id="wa1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a2978b"/></marker><marker id="wa2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#de805a"/></marker></defs>
+            <rect x="10" y="40" width="130" height="40" rx="6" class="w1"/><text x="40" y="65" class="wt">To Do</text>
+            <rect x="200" y="40" width="130" height="40" rx="6" class="w2"/><text x="218" y="65" class="wt">In Progress</text>
+            <rect x="390" y="40" width="130" height="40" rx="6" class="w2"/><text x="414" y="65" class="wt">In Review</text>
+            <rect x="580" y="40" width="130" height="40" rx="6" class="w3"/><text x="625" y="65" class="wt">Done</text>
+            <path d="M142,60 L196,60" class="wa"/><path d="M332,55 L386,55" class="wa"/><path d="M522,60 L576,60" class="wa"/>
+            <path d="M440,82 C420,110 300,110 270,84" class="wb"/><text x="300" y="122" class="wd">sent back from review (rework)</text>
+            <text x="38" y="30" class="wd">category: To Do</text><text x="250" y="30" class="wd">category: In Progress</text><text x="595" y="30" class="wd">category: Done</text>
+            <text x="150" y="52" class="wd">start</text><text x="340" y="48" class="wd">submit</text><text x="526" y="52" class="wd">approve</text>
+        </svg>
+    </div>
+    <ul>
+        <li>A <strong>workflow</strong> is a state machine: statuses and the <strong>transitions</strong> allowed between them. Transitions can have conditions (only the assignee), validators (a field must be set) and post-functions (set the resolution).</li>
+        <li>Every status belongs to one of three <strong>status categories</strong>: To Do, In Progress, Done. Queries and boards that use <code>statusCategory</code> keep working when a team renames or adds statuses.</li>
+        <li><strong>Resolution</strong> is a separate field (Done, Won't Do, Duplicate...). <code>resolution IS EMPTY</code> is the conventional test for "still open". Atlassian notes that service team-managed spaces have no resolution field, and recommends <code>statusCategory = Done</code> there.</li>
+        <li>For a simulation team, a status such as <em>Validated</em> (checked against a reference: RTL, silicon or a trusted model) between In Review and Done makes the evidence requirement part of the workflow rather than a habit.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-04">
+    <div class="slide-number">04</div>
+    <h2>Versions, Sprints and Kanban</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th></th><th>Scrum (sprints)</th><th>Kanban</th></tr></thead>
+        <tbody>
+            <tr><td>Cadence</td><td>Fixed time boxes (often two weeks), planned at the start, reviewed at the end</td><td>Continuous flow; items are pulled when capacity frees up</td></tr>
+            <tr><td>Limits</td><td>What is committed to the sprint</td><td>Explicit work-in-progress (WIP) limits per column</td></tr>
+            <tr><td>Main charts</td><td>Burndown or burn-up, velocity</td><td>Cumulative flow diagram, cycle time</td></tr>
+            <tr><td>Suits</td><td>Planned feature work: a new model component per release</td><td>Interrupt-driven work: studies, bug reports, validation requests</td></tr>
+        </tbody>
+    </table></div>
+    <ul>
+        <li><strong>Versions</strong> name releases of the simulator (1.5, 1.6). An item's <strong>fix version</strong> says which release will contain it. That turns "is 1.6 ready?" into a query (slide 06, query 3) and lets release notes be generated from the tracker.</li>
+        <li><strong>Boards</strong> in company-managed projects are views over a saved JQL filter; <strong>dashboards</strong> are gadgets over filters. Every chart a manager sees is therefore a query that can be read, reviewed and versioned.</li>
+        <li>Many simulation teams run both: Scrum for the roadmap, Kanban for the stream of "can you simulate X" requests. Atlassian's <a href="https://www.atlassian.com/agile/kanban/kanban-vs-scrum">Kanban vs Scrum</a> page sets out the difference.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-05">
+    <div class="slide-number">05</div>
+    <h2>JQL: the Query Language</h2>
+    <p>A JQL query is clauses of the form <code>field operator value</code>, joined by <code>AND</code>, <code>OR</code> and <code>NOT</code> with parentheses, optionally followed by <code>ORDER BY</code>. Everything below is taken from Atlassian's reference pages for <a href="https://support.atlassian.com/jira-software-cloud/docs/jql-fields/">fields</a>, <a href="https://support.atlassian.com/jira-software-cloud/docs/jql-operators/">operators</a>, <a href="https://support.atlassian.com/jira-software-cloud/docs/jql-functions/">functions</a> and <a href="https://support.atlassian.com/jira-software-cloud/docs/jql-keywords/">keywords</a>.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Part</th><th>Examples</th><th>Watch out for</th></tr></thead>
+        <tbody>
+            <tr><td>Comparison</td><td><code>=</code> <code>!=</code> <code>&gt;</code> <code>&gt;=</code> <code>&lt;</code> <code>&lt;=</code> <code>IN</code> <code>NOT IN</code></td><td><code>!=</code> does not return items where the field is empty: write <code>(assignee != currentUser() OR assignee IS EMPTY)</code></td></tr>
+            <tr><td>Empty</td><td><code>IS EMPTY</code>, <code>IS NOT EMPTY</code> (<code>NULL</code> is a synonym)</td><td>Only for fields that support <code>IS</code></td></tr>
+            <tr><td>Text</td><td><code>summary ~ "ONNX"</code>, <code>text ~ "flaky"</code></td><td>Matches words and simple derivatives, not substrings</td></tr>
+            <tr><td>History</td><td><code>status WAS "In Review"</code>, <code>status CHANGED FROM "In Review" TO "In Progress"</code></td><td>Only assignee, fix version, priority, reporter, resolution and status. Predicates: <code>AFTER</code>, <code>BEFORE</code>, <code>BY</code>, <code>DURING</code>, <code>ON</code> (and <code>FROM</code>, <code>TO</code> for <code>CHANGED</code>)</td></tr>
+            <tr><td>Functions</td><td><code>currentUser()</code>, <code>openSprints()</code>, <code>earliestUnreleasedVersion(SIM)</code>, <code>releasedVersions(SIM)</code>, <code>startOfWeek()</code></td><td>Each supports particular fields and operators (<code>openSprints()</code> only with <code>IN</code> and <code>NOT IN</code>)</td></tr>
+            <tr><td>Dates</td><td><code>created &gt;= "-30d"</code>, <code>updated &lt; "-2w"</code>, <code>"2026/08/01"</code></td><td>Relative dates are measured from now</td></tr>
+            <tr><td>Order</td><td><code>ORDER BY priority DESC, created ASC</code></td><td>Applies to the whole query, at the end</td></tr>
+        </tbody>
+    </table></div>
+    <p>Precedence matters: <code>AND</code> binds tighter than <code>OR</code>, so <code>type = Bug AND status = Done OR priority = High</code> returns every high-priority item, bug or not. When in doubt, add parentheses. These rules are also the test cases of the deck's evaluator.</p>
+</section>
+
+<section class="slide" id="slide-06">
+    <div class="slide-number">06</div>
+    <h2>Interactive: Worked JQL Queries</h2>
+    <p>Eleven questions a simulation team asks, as JQL, run against the example issue log (38 items, "now" is 28 September 2026, the current user is <span id="jq-me"></span>). Choose a query to see its matches highlighted, and why.</p>
+    <div class="control-panel">
+        <div class="control-row"><label for="jq-q">Question</label><select id="jq-q"></select></div>
+        <div class="code-block"><div class="code-header">JQL</div><pre><code id="jq-text"></code></pre></div>
+        <div class="result-box" id="jq-why"></div>
+        <div class="table-wrap" style="max-height: 360px; overflow-y: auto;"><table id="jq-t"></table></div>
+    </div>
+    <script>
+    (function () {
+        const ISSUES = {"note":"Example data generated by example_project.py (seed 7). Not from any real Jira site.","now":"2026-09-28","currentUser":"ri","versions":[{"name":"1.4","releaseDate":"2026-08-03","released":true},{"name":"1.5","releaseDate":"2026-09-14","released":true},{"name":"1.6","releaseDate":"2026-10-26","released":false},{"name":"1.7","releaseDate":"2026-12-07","released":false}],"sprints":[{"id":1,"start":"2026-07-06","end":"2026-07-20","state":"closed"},{"id":2,"start":"2026-07-20","end":"2026-08-03","state":"closed"},{"id":3,"start":"2026-08-03","end":"2026-08-17","state":"closed"},{"id":4,"start":"2026-08-17","end":"2026-08-31","state":"closed"},{"id":5,"start":"2026-08-31","end":"2026-09-14","state":"closed"},{"id":6,"start":"2026-09-14","end":"2026-09-28","state":"closed"},{"id":7,"start":"2026-09-28","end":"2026-10-12","state":"active"}],"issues":[{"type":"Epic","summary":"Memory model v2","component":"memsim","parent":null,"key":"SIM-1","created":"2026-07-06","assignee":"alex","reporter":"sam","priority":"High","labels":["perf","validation"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Epic","summary":"PyTorch front end","component":"frontend","parent":null,"key":"SIM-2","created":"2026-07-06","assignee":"sam","reporter":"alex","priority":"Medium","labels":["validation"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Epic","summary":"Nightly regression","component":"ci","parent":null,"key":"SIM-3","created":"2026-07-06","assignee":"alex","reporter":"sam","priority":"Low","labels":["docs","regression"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Epic","summary":"Power model calibration","component":"power","parent":null,"key":"SIM-4","created":"2026-07-06","assignee":"jo","reporter":"jo","priority":"Medium","labels":["perf"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Story","summary":"Add bank-group timing","component":"memsim","parent":"SIM-1","key":"SIM-5","created":"2026-09-11","assignee":"ri","reporter":"jo","priority":"Low","labels":["tech-debt"],"points":1,"status":"In Review","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-15","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-18","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7},{"type":"Story","summary":"FR-FCFS scheduler","component":"memsim","parent":"SIM-1","key":"SIM-6","created":"2026-09-06","assignee":"ri","reporter":"alex","priority":"Medium","labels":["regression"],"points":3,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-10","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-12","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-14","by":"ri"}],"resolution":"Done","resolved":"2026-09-14","fixVersion":"1.5","sprint":6},{"type":"Story","summary":"Refresh model","component":"memsim","parent":"SIM-1","key":"SIM-7","created":"2026-07-14","assignee":"alex","reporter":"jo","priority":"Low","labels":["docs"],"points":3,"status":"In Progress","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-18","by":"alex"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":7},{"type":"Task","summary":"Cross-check against DRAMsim3","component":"memsim","parent":"SIM-1","key":"SIM-8","created":"2026-07-20","assignee":"ri","reporter":"alex","priority":"Medium","labels":["perf"],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-24","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-26","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-29","by":"ri"}],"resolution":"Done","resolved":"2026-07-29","fixVersion":"1.4","sprint":2},{"type":"Story","summary":"XOR address mapping","component":"memsim","parent":"SIM-1","key":"SIM-9","created":"2026-07-23","assignee":"ri","reporter":"jo","priority":"Low","labels":["docs"],"points":2,"status":"In Review","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-25","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-28","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7},{"type":"Story","summary":"Protocol checker","component":"memsim","parent":"SIM-1","key":"SIM-10","created":"2026-07-07","assignee":"ri","reporter":"sam","priority":"High","labels":["validation"],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-10","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-16","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-19","by":"ri"}],"resolution":"Done","resolved":"2026-07-19","fixVersion":"1.4","sprint":1},{"type":"Task","summary":"Dispatch trace on meta device","component":"frontend","parent":"SIM-2","key":"SIM-11","created":"2026-09-23","assignee":"sam","reporter":"ri","priority":"Low","labels":["docs","tech-debt"],"points":1,"status":"In Review","history":[{"field":"assignee","from":"alex","to":"sam","on":"2026-09-24","by":"ri"},{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-27","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-28","by":"alex"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":7},{"type":"Story","summary":"ONNX graph walk","component":"frontend","parent":"SIM-2","key":"SIM-12","created":"2026-07-26","assignee":"alex","reporter":"jo","priority":"Medium","labels":[],"points":1,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-27","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-02","by":"alex"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-03","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-05","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-08","by":"alex"}],"resolution":"Done","resolved":"2026-08-08","fixVersion":"1.5","sprint":3},{"type":"Story","summary":"torch.compile backend","component":"frontend","parent":"SIM-2","key":"SIM-13","created":"2026-08-07","assignee":"ri","reporter":"jo","priority":"Low","labels":[],"points":1,"status":"Done","history":[{"field":"assignee","from":"jo","to":"ri","on":"2026-08-08","by":"jo"},{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-11","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-19","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-27","by":"jo"}],"resolution":"Done","resolved":"2026-08-27","fixVersion":"1.5","sprint":4},{"type":"Task","summary":"Operator coverage report","component":"frontend","parent":"SIM-2","key":"SIM-14","created":"2026-08-18","assignee":"jo","reporter":"ri","priority":"Medium","labels":[],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-21","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-24","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-25","by":"jo"}],"resolution":"Done","resolved":"2026-08-25","fixVersion":"1.5","sprint":4},{"type":"Story","summary":"Fused attention cost rule","component":"frontend","parent":"SIM-2","key":"SIM-15","created":"2026-07-17","assignee":"jo","reporter":"jo","priority":"Medium","labels":["perf"],"points":8,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-20","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-24","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-28","by":"jo"}],"resolution":"Done","resolved":"2026-07-28","fixVersion":"1.4","sprint":2},{"type":"Task","summary":"Decode step tracing","component":"frontend","parent":"SIM-2","key":"SIM-16","created":"2026-08-04","assignee":"sam","reporter":"ri","priority":"High","labels":[],"points":1,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-08","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-13","by":"sam"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-17","by":"sam"}],"resolution":"Done","resolved":"2026-08-17","fixVersion":"1.5","sprint":4},{"type":"Story","summary":"Jenkins pipeline for memsim","component":"ci","parent":"SIM-3","key":"SIM-17","created":"2026-09-01","assignee":"jo","reporter":"jo","priority":"Medium","labels":["validation"],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-04","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-08","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-16","by":"jo"}],"resolution":"Done","resolved":"2026-09-16","fixVersion":"1.6","sprint":6},{"type":"Story","summary":"JUnit and coverage publishing","component":"ci","parent":"SIM-3","key":"SIM-18","created":"2026-07-06","assignee":"ri","reporter":"jo","priority":"Medium","labels":[],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-08","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-16","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-19","by":"ri"}],"resolution":"Done","resolved":"2026-07-19","fixVersion":"1.4","sprint":1},{"type":"Story","summary":"Performance gate","component":"ci","parent":"SIM-3","key":"SIM-19","created":"2026-07-17","assignee":"ri","reporter":"ri","priority":"Low","labels":[],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-19","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-20","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-23","by":"ri"}],"resolution":"Done","resolved":"2026-07-23","fixVersion":"1.4","sprint":2},{"type":"Story","summary":"Nightly sweep","component":"ci","parent":"SIM-3","key":"SIM-20","created":"2026-07-24","assignee":"alex","reporter":"jo","priority":"Medium","labels":["validation"],"points":1,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-25","by":"ri"},{"field":"assignee","from":"ri","to":"alex","on":"2026-07-25","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-28","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-04","by":"ri"}],"resolution":"Done","resolved":"2026-08-04","fixVersion":"1.5","sprint":3},{"type":"Story","summary":"Traceability matrix in CI","component":"ci","parent":"SIM-3","key":"SIM-21","created":"2026-07-09","assignee":"jo","reporter":"sam","priority":"High","labels":["tech-debt"],"points":3,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-13","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-16","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-17","by":"jo"}],"resolution":"Done","resolved":"2026-07-17","fixVersion":"1.4","sprint":1},{"type":"Story","summary":"Idle power from measurements","component":"power","parent":"SIM-4","key":"SIM-22","created":"2026-09-02","assignee":"jo","reporter":"sam","priority":"Medium","labels":[],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-03","by":"ri"},{"field":"assignee","from":"ri","to":"jo","on":"2026-09-03","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-06","by":"ri"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-09-09","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-10","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-13","by":"ri"}],"resolution":"Done","resolved":"2026-09-13","fixVersion":"1.5","sprint":5},{"type":"Story","summary":"Energy per FLOP fit","component":"power","parent":"SIM-4","key":"SIM-23","created":"2026-09-10","assignee":"ri","reporter":"alex","priority":"Medium","labels":["perf"],"points":3,"status":"In Progress","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-11","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":7},{"type":"Story","summary":"DVFS validation","component":"power","parent":"SIM-4","key":"SIM-24","created":"2026-07-09","assignee":"alex","reporter":"ri","priority":"High","labels":["regression"],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-13","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-17","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-22","by":"alex"}],"resolution":"Done","resolved":"2026-07-22","fixVersion":"1.4","sprint":2},{"type":"Task","summary":"Power-cap scenarios","component":"power","parent":"SIM-4","key":"SIM-25","created":"2026-07-31","assignee":"ri","reporter":"sam","priority":"Low","labels":[],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-01","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-05","by":"ri"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-12","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-15","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-16","by":"ri"}],"resolution":"Done","resolved":"2026-08-16","fixVersion":"1.5","sprint":3},{"type":"Story","summary":"HBM3 preset","component":"memsim","parent":"SIM-1","key":"SIM-26","created":"2026-07-25","assignee":null,"reporter":"sam","priority":"High","labels":["docs"],"points":2,"status":"To Do","history":[{"field":"assignee","from":"jo","to":"sam","on":"2026-07-26","by":"sam"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Multi-device traces","component":"frontend","parent":"SIM-2","key":"SIM-27","created":"2026-08-03","assignee":null,"reporter":"ri","priority":"Low","labels":["docs"],"points":2,"status":"To Do","history":[{"field":"assignee","from":"sam","to":"jo","on":"2026-08-04","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Rust core for the memory model","component":"memsim","parent":"SIM-1","key":"SIM-28","created":"2026-09-02","assignee":null,"reporter":"alex","priority":"Low","labels":["tech-debt"],"points":8,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Dashboard for simulator metrics","component":"ci","parent":"SIM-3","key":"SIM-29","created":"2026-08-04","assignee":"jo","reporter":"alex","priority":"High","labels":["validation"],"points":2,"status":"To Do","history":[{"field":"assignee","from":"alex","to":"jo","on":"2026-08-05","by":"alex"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Thermal throttling model","component":"power","parent":"SIM-4","key":"SIM-30","created":"2026-08-08","assignee":null,"reporter":"sam","priority":"Low","labels":["validation"],"points":3,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7},{"type":"Bug","summary":"Wrong row-hit latency under refresh","component":"power","parent":"SIM-4","key":"SIM-31","created":"2026-08-27","assignee":"alex","reporter":"alex","priority":"High","labels":[],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-30","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-01","by":"alex"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-09-09","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-13","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-15","by":"alex"}],"resolution":"Done","resolved":"2026-09-15","fixVersion":"1.6","sprint":6},{"type":"Bug","summary":"ONNX shapes missing for attention","component":"memsim","parent":"SIM-1","key":"SIM-32","created":"2026-08-12","assignee":"sam","reporter":"alex","priority":"Medium","labels":["regression","validation"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-15","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-19","by":"sam"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-24","by":"sam"}],"resolution":"Done","resolved":"2026-08-24","fixVersion":"1.5","sprint":4},{"type":"Bug","summary":"Gate flaky on loaded agent","component":"memsim","parent":"SIM-1","key":"SIM-33","created":"2026-08-27","assignee":"ri","reporter":"alex","priority":"High","labels":["regression"],"points":null,"status":"Done","history":[{"field":"assignee","from":"jo","to":"ri","on":"2026-08-28","by":"alex"},{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-29","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-06","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-10","by":"jo"}],"resolution":"Done","resolved":"2026-09-10","fixVersion":"1.5","sprint":5},{"type":"Bug","summary":"Decode FLOPs off by one token","component":"frontend","parent":"SIM-2","key":"SIM-34","created":"2026-09-06","assignee":"ri","reporter":"ri","priority":"Highest","labels":["perf"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-08","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-15","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-21","by":"ri"}],"resolution":"Done","resolved":"2026-09-21","fixVersion":"1.6","sprint":6},{"type":"Bug","summary":"Embedding table counted per step","component":"memsim","parent":"SIM-1","key":"SIM-35","created":"2026-08-10","assignee":"alex","reporter":"jo","priority":"Low","labels":["regression","validation"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-13","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-17","by":"alex"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-22","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-24","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-25","by":"alex"}],"resolution":"Done","resolved":"2026-08-25","fixVersion":"1.5","sprint":4},{"type":"Bug","summary":"Sweep CSV has duplicate rows","component":"power","parent":"SIM-4","key":"SIM-36","created":"2026-08-10","assignee":"jo","reporter":"jo","priority":"High","labels":["perf","regression"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-12","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-18","by":"jo"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-21","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-25","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-26","by":"jo"}],"resolution":"Done","resolved":"2026-08-26","fixVersion":"1.5","sprint":4},{"type":"Bug","summary":"Coverage report crashes on empty trace","component":"memsim","parent":"SIM-1","key":"SIM-37","created":"2026-09-11","assignee":"sam","reporter":"sam","priority":"Highest","labels":["regression"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-13","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-20","by":"sam"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-21","by":"sam"}],"resolution":"Done","resolved":"2026-09-21","fixVersion":"1.6","sprint":6},{"type":"Bug","summary":"tFAW not enforced across ranks","component":"frontend","parent":"SIM-2","key":"SIM-38","created":"2026-09-19","assignee":"sam","reporter":"alex","priority":"Highest","labels":["regression","tech-debt"],"points":null,"status":"In Review","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-23","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-26","by":"sam"}],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7}]};  // from _simeng_build/snippets/t08/issues.json
+        const QUERIES = [{"title":"Open work, most urgent first","jql":"project = SIM AND type != Epic AND statusCategory != Done ORDER BY priority DESC, created ASC","keys":["SIM-38","SIM-26","SIM-29","SIM-23","SIM-7","SIM-9","SIM-27","SIM-30","SIM-28","SIM-5","SIM-11"]},{"title":"My work in the current sprint","jql":"project = SIM AND sprint in openSprints() AND assignee = currentUser()","keys":["SIM-5","SIM-9","SIM-23"]},{"title":"Open bugs against the next release","jql":"project = SIM AND type = Bug AND fixVersion = earliestUnreleasedVersion(SIM) AND resolution IS EMPTY","keys":["SIM-38"]},{"title":"Rework: sent back from review","jql":"project = SIM AND status CHANGED FROM \"In Review\" TO \"In Progress\"","keys":["SIM-12","SIM-22","SIM-25","SIM-31","SIM-35","SIM-36"]},{"title":"Started before September, still open","jql":"project = SIM AND status WAS \"In Progress\" BEFORE \"2026/09/01\" AND resolution IS EMPTY","keys":["SIM-7","SIM-9"]},{"title":"Validation work in the memory-model epic","jql":"project = SIM AND parent = SIM-1 AND labels = validation","keys":["SIM-10","SIM-32","SIM-35"]},{"title":"Regressions reported in the last 30 days","jql":"project = SIM AND type = Bug AND labels = regression AND created >= \"-30d\"","keys":["SIM-37","SIM-38"]},{"title":"Open, not mine (misses unassigned work)","jql":"project = SIM AND type != Epic AND statusCategory != Done AND assignee != currentUser()","keys":["SIM-7","SIM-11","SIM-29","SIM-38"]},{"title":"Open, not mine, including unassigned","jql":"project = SIM AND type != Epic AND statusCategory != Done AND (assignee != currentUser() OR assignee IS EMPTY)","keys":["SIM-7","SIM-11","SIM-26","SIM-27","SIM-28","SIM-29","SIM-30","SIM-38"]},{"title":"Bugs fixed in released versions","jql":"project = SIM AND type = Bug AND fixVersion in releasedVersions(SIM)","keys":["SIM-32","SIM-33","SIM-35","SIM-36"]},{"title":"Reassigned work","jql":"project = SIM AND assignee CHANGED","keys":["SIM-11","SIM-13","SIM-20","SIM-22","SIM-26","SIM-27","SIM-29","SIM-33"]}];  // from _simeng_build/snippets/t08/queries.json
+        const $ = id => document.getElementById(id);
+        const WHY = [
+            'Excludes epics, keeps everything whose status category is not Done, then sorts by priority (Highest first) and age.',
+            'openSprints() returns the active sprint; currentUser() is whoever runs the query. The same saved filter shows each engineer their own work.',
+            'earliestUnreleasedVersion(SIM) is the next release. resolution IS EMPTY means not resolved. This is a release-readiness check: the answer should go to zero before sign-off.',
+            'CHANGED FROM ... TO ... finds a transition in the history: items sent back from review. A rising count is a quality signal for reviews or for the definition of done.',
+            'WAS ... BEFORE looks at history: items that were already in progress before September and are still unresolved. This is ageing work (slide 10).',
+            'parent links stories to their epic; labels are free-form tags. Both are plain field clauses.',
+            'Relative dates count back from now: "-30d" is 30 days ago.',
+            'The documented gotcha: != does not match items whose assignee is empty, so the unassigned backlog silently disappears from this list.',
+            'The documented fix: (assignee != currentUser() OR assignee IS EMPTY). Compare the count with the previous query.',
+            'releasedVersions(SIM) lists shipped versions: bugs fixed in a release that has gone out.',
+            'assignee CHANGED: any change of assignee in the history. Frequent hand-offs are worth a look.',
+        ];
+        ISSUES.issues.length && ($('jq-me').textContent = ISSUES.currentUser);
+        QUERIES.forEach((q, i) => $('jq-q').add(new Option(`${i + 1}. ${q.title}`, i)));
+        const cols = ['key', 'type', 'summary', 'status', 'assignee', 'fixVersion', 'sprint', 'labels', 'parent'];
+        function draw() {
+            const q = QUERIES[+$('jq-q').value], hit = new Set(q.keys);
+            $('jq-text').textContent = q.jql;
+            $('jq-why').innerHTML = `<span class="line-label">${q.keys.length} match${q.keys.length === 1 ? '' : 'es'}</span>: ${WHY[+$('jq-q').value]}`;
+            const order = [...q.keys.map(k => ISSUES.issues.find(i => i.key === k)), ...ISSUES.issues.filter(i => !hit.has(i.key))];
+            $('jq-t').innerHTML = '<thead><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>'
+                + order.map(i => `<tr style="${hit.has(i.key) ? 'background: rgba(170,189,89,0.18)' : 'opacity: 0.45'}">`
+                    + cols.map(c => `<td>${Array.isArray(i[c]) ? i[c].join(', ') : (i[c] ?? '<em>empty</em>')}</td>`).join('') + '</tr>').join('')
+                + '</tbody>';
+        }
+        $('jq-q').addEventListener('input', draw);
+        draw();
+    })();
+    </script>
+    <p class="src">Matches computed by <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/t08/jql.py">snippets/t08/jql.py</a> on <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/t08/issues.json">example data</a>; recorded in snippets/RESULTS.md.</p>
+</section>
+
+<section class="slide" id="slide-07">
+    <div class="slide-number">07</div>
+    <h2>Git and Jenkins Integration</h2>
+    <p>Development work links itself to the tracker when the item's key appears in it. According to <a href="https://support.atlassian.com/jira-software-cloud/docs/reference-issues-in-your-development-work/">Atlassian's documentation</a>, the key must be in the branch name, in the commit message, or in a pull request's title or source branch. The item's development panel then shows its branches, commits, pull requests, builds and deployments.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Smart commit</th><th>Effect</th></tr></thead>
+        <tbody>
+            <tr><td><code>SIM-38 #comment fixed tFAW across ranks</code></td><td>Adds a comment to SIM-38</td></tr>
+            <tr><td><code>SIM-38 #time 1d 4h checked against DRAMsim3</code></td><td>Logs work (w, d, h, m; decimals allowed), with the rest as its comment</td></tr>
+            <tr><td><code>SIM-38 #resolve #comment validated on the nightly sweep</code></td><td>Runs the workflow transition whose name starts with "resolve", then comments</td></tr>
+        </tbody>
+    </table></div>
+    <p class="src">Syntax from <a href="https://support.atlassian.com/jira-software-cloud/docs/process-issues-with-smart-commits/">Process work items with smart commits</a>.</p>
+    <ul>
+        <li><strong>Transition names are matched up to the first space</strong>, so <code>#start</code> is ambiguous between "Start Progress" and "Start Review"; write <code>#start-review</code>. A transition fails silently if it needs a field the commit cannot set. The committer's email must match a single Jira user with permission.</li>
+        <li><strong>Jenkins.</strong> The Jira side installs the <em>Jenkins for Jira</em> app; the Jenkins side the <a href="https://plugins.jenkins.io/atlassian-jira-software-cloud/">Atlassian Jira Software Cloud plugin</a>, whose <code>jiraSendBuildInfo</code> and <code>jiraSendDeploymentInfo</code> steps report builds and deployments for the keys found in the commits and branch names being built (<a href="https://support.atlassian.com/jira-cloud-administration/docs/integrate-jenkins-with-jira/">Atlassian's set-up guide</a>). Check the current versions before relying on either.</li>
+        <li><strong>The value for a simulation team:</strong> each item shows the nightly regression that tested its fix, so "is SIM-38 really fixed?" has a link to an answer (<a href="https://brendanjameslynskey.github.io/SimEng_07_Jenkins_for_Simulation_Teams/">deck 07</a>).</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-08">
+    <div class="slide-number">08</div>
+    <h2>Traceability: Requirement, Work Item, Test, Build</h2>
+    <div class="canvas-wrap">
+        <svg viewBox="0 0 720 120" width="720" height="120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Traceability chain: requirement SF-15, work item SIM-n, test test_gate.py, build number, report">
+            <style>
+                .t1 { fill: #2b2520; stroke: #aabd59; stroke-width: 1.5; }
+                .tt { fill: #efe8dc; font-family: 'Geist Mono', monospace; font-size: 11px; }
+                .td { fill: #a2978b; font-family: 'Geist Mono', monospace; font-size: 10px; }
+                .ta { stroke: #a2978b; stroke-width: 1.3; fill: none; marker-end: url(#ta1); }
+            </style>
+            <defs><marker id="ta1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#a2978b"/></marker></defs>
+            <rect x="5" y="30" width="130" height="50" rx="6" class="t1"/><text x="15" y="50" class="tt">requirement</text><text x="15" y="67" class="td">SF-15 (spec.md)</text>
+            <rect x="150" y="30" width="130" height="50" rx="6" class="t1"/><text x="160" y="50" class="tt">work item</text><text x="160" y="67" class="td">implements SF-15</text>
+            <rect x="295" y="30" width="130" height="50" rx="6" class="t1"/><text x="305" y="50" class="tt">commit / PR</text><text x="305" y="67" class="td">key in message</text>
+            <rect x="440" y="30" width="130" height="50" rx="6" class="t1"/><text x="450" y="50" class="tt">test</text><text x="450" y="67" class="td">req("SF-15")</text>
+            <rect x="585" y="30" width="130" height="50" rx="6" class="t1"/><text x="595" y="50" class="tt">build</text><text x="595" y="67" class="td">JUnit + matrix</text>
+            <path d="M137,55 L146,55" class="ta"/><path d="M282,55 L291,55" class="ta"/><path d="M427,55 L436,55" class="ta"/><path d="M572,55 L581,55" class="ta"/>
+            <text x="5" y="105" class="td">each link is something a tool can check: a missing one is a gap, not a matter of opinion</text>
+        </svg>
+    </div>
+    <ul>
+        <li><strong>Requirements to tests</strong> belong next to the code: an ID in the spec, the same ID on the tests, a generated matrix. <a href="https://brendanjameslynskey.github.io/SimEng_09_Specs_Requirements_Test_Plans/">Deck 09</a> builds one for Torch_Sim_Frontend; its first run found a requirement nothing tested.</li>
+        <li><strong>Work items to requirements</strong> can use links or a field holding the requirement ID. Test-management apps from the Atlassian Marketplace model tests and runs as Jira items, if a team wants all of it in the tracker.</li>
+        <li><strong>Builds to work items</strong> come from the integration on slide 07: the build that ran a requirement's tests is one click from the item.</li>
+        <li>The aim is a chain an auditor (or a customer) can follow from "the simulator shall..." to the run that shows it does.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-09">
+    <div class="slide-number">09</div>
+    <h2>The Metrics a Simulation Team Should Report</h2>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Area</th><th>Metric</th><th>From</th><th>Why it matters</th></tr></thead>
+        <tbody>
+            <tr><td>Flow</td><td>Cycle time (50th and 85th percentile), throughput, WIP, ageing items</td><td>Workflow history</td><td>Predictability: "when will my study be done?"</td></tr>
+            <tr><td>Accuracy</td><td>Error against references: RTL cycle counts, silicon, trusted models</td><td>Validation suite in CI</td><td>The simulator's reason to exist (<a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/">InfSim 06</a>)</td></tr>
+            <tr><td>Coverage</td><td>Requirements verified; operators and workloads supported</td><td>Traceability matrix; operator coverage (<a href="https://brendanjameslynskey.github.io/SimEng_10_PyTorch_ONNX_Frontends/">deck 10</a>)</td><td>What the answers can be trusted for</td></tr>
+            <tr><td>Quality</td><td>Open bugs per release, escaped defects, regressions, flaky tests</td><td>JQL (queries 3, 7, 10); CI</td><td>Release readiness</td></tr>
+            <tr><td>Performance</td><td>Simulated events per second, wall time of the standard sweep</td><td>The CI performance gate (<a href="https://brendanjameslynskey.github.io/SimEng_07_Jenkins_for_Simulation_Teams/">deck 07</a>)</td><td>Users wait for it; slow simulators get bypassed</td></tr>
+        </tbody>
+    </table></div>
+    <ul>
+        <li><strong>Report distributions, not averages.</strong> A median cycle time of 10 days with an 85th percentile of 14 says something an average cannot.</li>
+        <li><strong>Prefer metrics a tool computes</strong> from records (history, CI, the matrix) over ones people type in.</li>
+        <li><strong>Goodhart's law applies:</strong> a measure that becomes a target stops measuring. Story points and velocity in particular are planning aids, not productivity measures.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-10">
+    <div class="slide-number">10</div>
+    <h2>Interactive: Flow Metrics From the Workflow History</h2>
+    <p>Computed here, in the browser, from the example issue log's history: when each item entered each status. The cumulative flow diagram counts items in each status category on each day; the scatter shows each finished item's cycle time (first "In Progress" to "Done"). Little's law (<a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-little">LLM Inference Simulators glossary</a>) says average WIP = throughput &times; average cycle time, for items that finished.</p>
+    <div class="control-panel">
+        <div class="control-row"><label for="fm-in">Count in-flight items in WIP</label><input type="checkbox" id="fm-in" checked></div>
+        <div class="metric-grid" id="fm-m"></div>
+        <div class="chart-pair">
+            <div><div class="chart-title">Cumulative flow (items by status category)</div><svg id="fm-cfd" viewBox="0 0 360 220" width="360" height="220" style="max-width: 100%; height: auto;" xmlns="http://www.w3.org/2000/svg"></svg></div>
+            <div><div class="chart-title">Cycle time of finished items (days)</div><svg id="fm-ct" viewBox="0 0 360 220" width="360" height="220" style="max-width: 100%; height: auto;" xmlns="http://www.w3.org/2000/svg"></svg></div>
+        </div>
+        <div class="result-box" id="fm-r"></div>
+    </div>
+    <script>
+    (function () {
+        const LOG = {"note":"Example data generated by example_project.py (seed 7). Not from any real Jira site.","now":"2026-09-28","currentUser":"ri","versions":[{"name":"1.4","releaseDate":"2026-08-03","released":true},{"name":"1.5","releaseDate":"2026-09-14","released":true},{"name":"1.6","releaseDate":"2026-10-26","released":false},{"name":"1.7","releaseDate":"2026-12-07","released":false}],"sprints":[{"id":1,"start":"2026-07-06","end":"2026-07-20","state":"closed"},{"id":2,"start":"2026-07-20","end":"2026-08-03","state":"closed"},{"id":3,"start":"2026-08-03","end":"2026-08-17","state":"closed"},{"id":4,"start":"2026-08-17","end":"2026-08-31","state":"closed"},{"id":5,"start":"2026-08-31","end":"2026-09-14","state":"closed"},{"id":6,"start":"2026-09-14","end":"2026-09-28","state":"closed"},{"id":7,"start":"2026-09-28","end":"2026-10-12","state":"active"}],"issues":[{"type":"Epic","summary":"Memory model v2","component":"memsim","parent":null,"key":"SIM-1","created":"2026-07-06","assignee":"alex","reporter":"sam","priority":"High","labels":["perf","validation"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Epic","summary":"PyTorch front end","component":"frontend","parent":null,"key":"SIM-2","created":"2026-07-06","assignee":"sam","reporter":"alex","priority":"Medium","labels":["validation"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Epic","summary":"Nightly regression","component":"ci","parent":null,"key":"SIM-3","created":"2026-07-06","assignee":"alex","reporter":"sam","priority":"Low","labels":["docs","regression"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Epic","summary":"Power model calibration","component":"power","parent":null,"key":"SIM-4","created":"2026-07-06","assignee":"jo","reporter":"jo","priority":"Medium","labels":["perf"],"points":null,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":null,"sprint":null},{"type":"Story","summary":"Add bank-group timing","component":"memsim","parent":"SIM-1","key":"SIM-5","created":"2026-09-11","assignee":"ri","reporter":"jo","priority":"Low","labels":["tech-debt"],"points":1,"status":"In Review","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-15","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-18","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7},{"type":"Story","summary":"FR-FCFS scheduler","component":"memsim","parent":"SIM-1","key":"SIM-6","created":"2026-09-06","assignee":"ri","reporter":"alex","priority":"Medium","labels":["regression"],"points":3,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-10","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-12","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-14","by":"ri"}],"resolution":"Done","resolved":"2026-09-14","fixVersion":"1.5","sprint":6},{"type":"Story","summary":"Refresh model","component":"memsim","parent":"SIM-1","key":"SIM-7","created":"2026-07-14","assignee":"alex","reporter":"jo","priority":"Low","labels":["docs"],"points":3,"status":"In Progress","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-18","by":"alex"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":7},{"type":"Task","summary":"Cross-check against DRAMsim3","component":"memsim","parent":"SIM-1","key":"SIM-8","created":"2026-07-20","assignee":"ri","reporter":"alex","priority":"Medium","labels":["perf"],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-24","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-26","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-29","by":"ri"}],"resolution":"Done","resolved":"2026-07-29","fixVersion":"1.4","sprint":2},{"type":"Story","summary":"XOR address mapping","component":"memsim","parent":"SIM-1","key":"SIM-9","created":"2026-07-23","assignee":"ri","reporter":"jo","priority":"Low","labels":["docs"],"points":2,"status":"In Review","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-25","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-28","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7},{"type":"Story","summary":"Protocol checker","component":"memsim","parent":"SIM-1","key":"SIM-10","created":"2026-07-07","assignee":"ri","reporter":"sam","priority":"High","labels":["validation"],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-10","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-16","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-19","by":"ri"}],"resolution":"Done","resolved":"2026-07-19","fixVersion":"1.4","sprint":1},{"type":"Task","summary":"Dispatch trace on meta device","component":"frontend","parent":"SIM-2","key":"SIM-11","created":"2026-09-23","assignee":"sam","reporter":"ri","priority":"Low","labels":["docs","tech-debt"],"points":1,"status":"In Review","history":[{"field":"assignee","from":"alex","to":"sam","on":"2026-09-24","by":"ri"},{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-27","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-28","by":"alex"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":7},{"type":"Story","summary":"ONNX graph walk","component":"frontend","parent":"SIM-2","key":"SIM-12","created":"2026-07-26","assignee":"alex","reporter":"jo","priority":"Medium","labels":[],"points":1,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-27","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-02","by":"alex"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-03","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-05","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-08","by":"alex"}],"resolution":"Done","resolved":"2026-08-08","fixVersion":"1.5","sprint":3},{"type":"Story","summary":"torch.compile backend","component":"frontend","parent":"SIM-2","key":"SIM-13","created":"2026-08-07","assignee":"ri","reporter":"jo","priority":"Low","labels":[],"points":1,"status":"Done","history":[{"field":"assignee","from":"jo","to":"ri","on":"2026-08-08","by":"jo"},{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-11","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-19","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-27","by":"jo"}],"resolution":"Done","resolved":"2026-08-27","fixVersion":"1.5","sprint":4},{"type":"Task","summary":"Operator coverage report","component":"frontend","parent":"SIM-2","key":"SIM-14","created":"2026-08-18","assignee":"jo","reporter":"ri","priority":"Medium","labels":[],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-21","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-24","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-25","by":"jo"}],"resolution":"Done","resolved":"2026-08-25","fixVersion":"1.5","sprint":4},{"type":"Story","summary":"Fused attention cost rule","component":"frontend","parent":"SIM-2","key":"SIM-15","created":"2026-07-17","assignee":"jo","reporter":"jo","priority":"Medium","labels":["perf"],"points":8,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-20","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-24","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-28","by":"jo"}],"resolution":"Done","resolved":"2026-07-28","fixVersion":"1.4","sprint":2},{"type":"Task","summary":"Decode step tracing","component":"frontend","parent":"SIM-2","key":"SIM-16","created":"2026-08-04","assignee":"sam","reporter":"ri","priority":"High","labels":[],"points":1,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-08","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-13","by":"sam"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-17","by":"sam"}],"resolution":"Done","resolved":"2026-08-17","fixVersion":"1.5","sprint":4},{"type":"Story","summary":"Jenkins pipeline for memsim","component":"ci","parent":"SIM-3","key":"SIM-17","created":"2026-09-01","assignee":"jo","reporter":"jo","priority":"Medium","labels":["validation"],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-04","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-08","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-16","by":"jo"}],"resolution":"Done","resolved":"2026-09-16","fixVersion":"1.6","sprint":6},{"type":"Story","summary":"JUnit and coverage publishing","component":"ci","parent":"SIM-3","key":"SIM-18","created":"2026-07-06","assignee":"ri","reporter":"jo","priority":"Medium","labels":[],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-08","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-16","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-19","by":"ri"}],"resolution":"Done","resolved":"2026-07-19","fixVersion":"1.4","sprint":1},{"type":"Story","summary":"Performance gate","component":"ci","parent":"SIM-3","key":"SIM-19","created":"2026-07-17","assignee":"ri","reporter":"ri","priority":"Low","labels":[],"points":2,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-19","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-20","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-23","by":"ri"}],"resolution":"Done","resolved":"2026-07-23","fixVersion":"1.4","sprint":2},{"type":"Story","summary":"Nightly sweep","component":"ci","parent":"SIM-3","key":"SIM-20","created":"2026-07-24","assignee":"alex","reporter":"jo","priority":"Medium","labels":["validation"],"points":1,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-25","by":"ri"},{"field":"assignee","from":"ri","to":"alex","on":"2026-07-25","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-28","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-04","by":"ri"}],"resolution":"Done","resolved":"2026-08-04","fixVersion":"1.5","sprint":3},{"type":"Story","summary":"Traceability matrix in CI","component":"ci","parent":"SIM-3","key":"SIM-21","created":"2026-07-09","assignee":"jo","reporter":"sam","priority":"High","labels":["tech-debt"],"points":3,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-13","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-16","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-17","by":"jo"}],"resolution":"Done","resolved":"2026-07-17","fixVersion":"1.4","sprint":1},{"type":"Story","summary":"Idle power from measurements","component":"power","parent":"SIM-4","key":"SIM-22","created":"2026-09-02","assignee":"jo","reporter":"sam","priority":"Medium","labels":[],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-03","by":"ri"},{"field":"assignee","from":"ri","to":"jo","on":"2026-09-03","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-06","by":"ri"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-09-09","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-10","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-13","by":"ri"}],"resolution":"Done","resolved":"2026-09-13","fixVersion":"1.5","sprint":5},{"type":"Story","summary":"Energy per FLOP fit","component":"power","parent":"SIM-4","key":"SIM-23","created":"2026-09-10","assignee":"ri","reporter":"alex","priority":"Medium","labels":["perf"],"points":3,"status":"In Progress","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-11","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":7},{"type":"Story","summary":"DVFS validation","component":"power","parent":"SIM-4","key":"SIM-24","created":"2026-07-09","assignee":"alex","reporter":"ri","priority":"High","labels":["regression"],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-07-13","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-07-17","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-07-22","by":"alex"}],"resolution":"Done","resolved":"2026-07-22","fixVersion":"1.4","sprint":2},{"type":"Task","summary":"Power-cap scenarios","component":"power","parent":"SIM-4","key":"SIM-25","created":"2026-07-31","assignee":"ri","reporter":"sam","priority":"Low","labels":[],"points":5,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-01","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-05","by":"ri"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-12","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-15","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-16","by":"ri"}],"resolution":"Done","resolved":"2026-08-16","fixVersion":"1.5","sprint":3},{"type":"Story","summary":"HBM3 preset","component":"memsim","parent":"SIM-1","key":"SIM-26","created":"2026-07-25","assignee":null,"reporter":"sam","priority":"High","labels":["docs"],"points":2,"status":"To Do","history":[{"field":"assignee","from":"jo","to":"sam","on":"2026-07-26","by":"sam"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Multi-device traces","component":"frontend","parent":"SIM-2","key":"SIM-27","created":"2026-08-03","assignee":null,"reporter":"ri","priority":"Low","labels":["docs"],"points":2,"status":"To Do","history":[{"field":"assignee","from":"sam","to":"jo","on":"2026-08-04","by":"ri"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Rust core for the memory model","component":"memsim","parent":"SIM-1","key":"SIM-28","created":"2026-09-02","assignee":null,"reporter":"alex","priority":"Low","labels":["tech-debt"],"points":8,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Dashboard for simulator metrics","component":"ci","parent":"SIM-3","key":"SIM-29","created":"2026-08-04","assignee":"jo","reporter":"alex","priority":"High","labels":["validation"],"points":2,"status":"To Do","history":[{"field":"assignee","from":"alex","to":"jo","on":"2026-08-05","by":"alex"}],"resolution":null,"resolved":null,"fixVersion":"1.7","sprint":null},{"type":"Story","summary":"Thermal throttling model","component":"power","parent":"SIM-4","key":"SIM-30","created":"2026-08-08","assignee":null,"reporter":"sam","priority":"Low","labels":["validation"],"points":3,"status":"To Do","history":[],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7},{"type":"Bug","summary":"Wrong row-hit latency under refresh","component":"power","parent":"SIM-4","key":"SIM-31","created":"2026-08-27","assignee":"alex","reporter":"alex","priority":"High","labels":[],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-30","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-01","by":"alex"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-09-09","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-13","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-15","by":"alex"}],"resolution":"Done","resolved":"2026-09-15","fixVersion":"1.6","sprint":6},{"type":"Bug","summary":"ONNX shapes missing for attention","component":"memsim","parent":"SIM-1","key":"SIM-32","created":"2026-08-12","assignee":"sam","reporter":"alex","priority":"Medium","labels":["regression","validation"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-15","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-19","by":"sam"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-24","by":"sam"}],"resolution":"Done","resolved":"2026-08-24","fixVersion":"1.5","sprint":4},{"type":"Bug","summary":"Gate flaky on loaded agent","component":"memsim","parent":"SIM-1","key":"SIM-33","created":"2026-08-27","assignee":"ri","reporter":"alex","priority":"High","labels":["regression"],"points":null,"status":"Done","history":[{"field":"assignee","from":"jo","to":"ri","on":"2026-08-28","by":"alex"},{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-29","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-06","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-10","by":"jo"}],"resolution":"Done","resolved":"2026-09-10","fixVersion":"1.5","sprint":5},{"type":"Bug","summary":"Decode FLOPs off by one token","component":"frontend","parent":"SIM-2","key":"SIM-34","created":"2026-09-06","assignee":"ri","reporter":"ri","priority":"Highest","labels":["perf"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-08","by":"ri"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-15","by":"ri"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-21","by":"ri"}],"resolution":"Done","resolved":"2026-09-21","fixVersion":"1.6","sprint":6},{"type":"Bug","summary":"Embedding table counted per step","component":"memsim","parent":"SIM-1","key":"SIM-35","created":"2026-08-10","assignee":"alex","reporter":"jo","priority":"Low","labels":["regression","validation"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-13","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-17","by":"alex"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-22","by":"alex"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-24","by":"alex"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-25","by":"alex"}],"resolution":"Done","resolved":"2026-08-25","fixVersion":"1.5","sprint":4},{"type":"Bug","summary":"Sweep CSV has duplicate rows","component":"power","parent":"SIM-4","key":"SIM-36","created":"2026-08-10","assignee":"jo","reporter":"jo","priority":"High","labels":["perf","regression"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-08-12","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-18","by":"jo"},{"field":"status","from":"In Review","to":"In Progress","on":"2026-08-21","by":"jo"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-08-25","by":"jo"},{"field":"status","from":"In Review","to":"Done","on":"2026-08-26","by":"jo"}],"resolution":"Done","resolved":"2026-08-26","fixVersion":"1.5","sprint":4},{"type":"Bug","summary":"Coverage report crashes on empty trace","component":"memsim","parent":"SIM-1","key":"SIM-37","created":"2026-09-11","assignee":"sam","reporter":"sam","priority":"Highest","labels":["regression"],"points":null,"status":"Done","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-13","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-20","by":"sam"},{"field":"status","from":"In Review","to":"Done","on":"2026-09-21","by":"sam"}],"resolution":"Done","resolved":"2026-09-21","fixVersion":"1.6","sprint":6},{"type":"Bug","summary":"tFAW not enforced across ranks","component":"frontend","parent":"SIM-2","key":"SIM-38","created":"2026-09-19","assignee":"sam","reporter":"alex","priority":"Highest","labels":["regression","tech-debt"],"points":null,"status":"In Review","history":[{"field":"status","from":"To Do","to":"In Progress","on":"2026-09-23","by":"sam"},{"field":"status","from":"In Progress","to":"In Review","on":"2026-09-26","by":"sam"}],"resolution":null,"resolved":null,"fixVersion":"1.6","sprint":7}]};  // from _simeng_build/snippets/t08/issues.json
+        const $ = id => document.getElementById(id);
+        const day = s => Math.round(Date.parse(s + 'T00:00:00Z') / 864e5);
+        const now = day(LOG.now), work = LOG.issues.filter(i => i.type !== 'Epic');
+        const first = i => { const h = i.history.find(h => h.to === 'In Progress'); return h ? day(h.on) : null; };
+        const cycles = work.filter(i => i.resolved && first(i) !== null).map(i => day(i.resolved) - first(i)).sort((a, b) => a - b);
+        const pct = p => cycles[Math.min(cycles.length - 1, Math.floor(p / 100 * cycles.length))];
+        const start = Math.min(...work.map(i => day(i.created))), days = now - start;
+        const finishedDays = cycles.reduce((a, b) => a + b, 0);
+        const flight = work.filter(i => !i.resolved && first(i) !== null).map(i => [i.key, now - first(i)]);
+        const flightDays = flight.reduce((a, f) => a + f[1], 0);
+        const thr = cycles.length / days, mean = finishedDays / cycles.length;
+        const cat = s => s === 'Done' ? 2 : (s === 'To Do' ? 0 : 1);
+        function statusOn(i, d) {                          // status category of item i at the end of day d
+            if (day(i.created) > d) return -1;
+            let s = 'To Do';
+            for (const h of i.history) if (h.field === 'status' && day(h.on) <= d) s = h.to;
+            return cat(s);
+        }
+        function draw() {
+            const withFlight = $('fm-in').checked;
+            const wip = (finishedDays + (withFlight ? flightDays : 0)) / days;
+            const m = (l, v) => `<div class="metric"><div class="metric-label">${l}</div><div class="metric-value">${v}</div></div>`;
+            $('fm-m').innerHTML = m('Cycle time p50 / p85', `${pct(50)} / ${pct(85)} d`) + m('Throughput', (7 * thr).toFixed(2) + ' / week')
+                + m('Average WIP', wip.toFixed(2)) + m("Little's law: thr x mean", (thr * mean).toFixed(2));
+            // cumulative flow
+            const X = d => 30 + 320 * (d - start) / days, maxN = work.length, Y = n => 200 - 185 * n / maxN;
+            const bands = [[], [], []];
+            for (let d = start; d <= now; d++) {
+                const c = [0, 0, 0]; work.forEach(i => { const s = statusOn(i, d); if (s >= 0) c[s]++; });
+                bands[0].push([d, c[2]]); bands[1].push([d, c[2] + c[1]]); bands[2].push([d, c[2] + c[1] + c[0]]);
+            }
+            const area = (top, bot, col) => `<path d="M${top.map(([d, n]) => `${X(d).toFixed(1)},${Y(n).toFixed(1)}`).join(' L')} L${bot.slice().reverse().map(([d, n]) => `${X(d).toFixed(1)},${Y(n).toFixed(1)}`).join(' L')} Z" fill="${col}" opacity="0.85"/>`;
+            const zero = bands[0].map(([d]) => [d, 0]);
+            let s = area(bands[2], bands[1], '#a2978b') + area(bands[1], bands[0], '#e3b174') + area(bands[0], zero, '#aabd59');
+            s += `<line x1="30" y1="200" x2="350" y2="200" stroke="#a2978b"/><line x1="30" y1="15" x2="30" y2="200" stroke="#a2978b"/>`;
+            s += `<text x="26" y="${Y(maxN) + 4}" text-anchor="end" fill="#a2978b" font-size="9" font-family="Geist Mono, monospace">${maxN}</text><text x="26" y="203" text-anchor="end" fill="#a2978b" font-size="9" font-family="Geist Mono, monospace">0</text>`;
+            s += `<text x="30" y="214" fill="#a2978b" font-size="9" font-family="Geist Mono, monospace">${LOG.issues[0].created}</text><text x="350" y="214" text-anchor="end" fill="#a2978b" font-size="9" font-family="Geist Mono, monospace">${LOG.now}</text>`;
+            s += `<rect x="36" y="18" width="128" height="44" fill="#1f1a16" stroke="#3a322b"/>`
+                + [['To Do', '#a2978b'], ['In Progress', '#e3b174'], ['Done', '#aabd59']].map(([l, c], k) => `<rect x="42" y="${23 + 13 * k}" width="9" height="9" fill="${c}"/><text x="56" y="${31 + 13 * k}" fill="#efe8dc" font-size="9" font-family="Geist Mono, monospace">${l}</text>`).join('');
+            $('fm-cfd').innerHTML = s;
+            // cycle-time scatter
+            const done = work.filter(i => i.resolved && first(i) !== null);
+            const cmax = Math.max(...cycles, ...flight.map(f => withFlight ? f[1] : 0)) + 2;
+            const Yc = c => 200 - 185 * c / cmax;
+            let t = `<line x1="30" y1="200" x2="350" y2="200" stroke="#a2978b"/><line x1="30" y1="15" x2="30" y2="200" stroke="#a2978b"/>`;
+            [[50, '#97cdc6', 11], [85, '#de805a', -3]].forEach(([p, c, dy]) => { t += `<line x1="30" x2="350" y1="${Yc(pct(p))}" y2="${Yc(pct(p))}" stroke="${c}" stroke-dasharray="4 3"/><text x="34" y="${Yc(pct(p)) + dy}" fill="${c}" font-size="9" font-family="Geist Mono, monospace">p${p} = ${pct(p)} d</text>`; });
+            done.forEach(i => { t += `<circle cx="${X(day(i.resolved))}" cy="${Yc(day(i.resolved) - first(i))}" r="3.5" fill="#aabd59"/>`; });
+            if (withFlight) flight.forEach(([k, a]) => { t += `<circle cx="${X(now)}" cy="${Yc(a)}" r="3.5" fill="none" stroke="#de805a" stroke-width="1.5"/>`
+                + (a > pct(85) ? `<text x="${X(now) - 6}" y="${Yc(a) + 3}" text-anchor="end" fill="#de805a" font-size="9" font-family="Geist Mono, monospace">${k} (${a} d, open)</text>` : ''); });
+            t += `<text x="26" y="${Yc(cmax - 2) + 4}" text-anchor="end" fill="#a2978b" font-size="9" font-family="Geist Mono, monospace">${cmax - 2}</text><text x="26" y="203" text-anchor="end" fill="#a2978b" font-size="9" font-family="Geist Mono, monospace">0</text>`;
+            $('fm-ct').innerHTML = t;
+            const aged = flight.filter(f => f[1] > pct(85));
+            $('fm-r').innerHTML = withFlight
+                ? `Measured average WIP is ${wip.toFixed(2)} items, against ${(thr * mean).toFixed(2)} from Little's law on finished items. The difference is the ${flight.length} items still in flight, which have spent ${flightDays} item-days in progress so far; ${aged.length} of them (${aged.map(a => a[0]).join(', ')}) have been in progress longer than the 85th-percentile cycle time. Ageing items are what to ask about at the next stand-up.`
+                : `Counting only finished items, WIP is exactly throughput x mean cycle time (${(thr * mean).toFixed(2)}): Little's law on its own terms. Tick the box to see what that leaves out.`;
+        }
+        $('fm-in').addEventListener('input', draw);
+        draw();
+    })();
+    </script>
+</section>
+
+<section class="slide" id="slide-11">
+    <div class="slide-number">11</div>
+    <h2>Showing Progress to Sign-Off</h2>
+    <p>Sign-off on a simulator release, or on a simulation study that feeds a chip decision, is a judgement made from evidence. The tracker's job is to make the evidence complete and easy to check:</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Question at sign-off</th><th>Evidence</th></tr></thead>
+        <tbody>
+            <tr><td>Is everything planned for 1.6 done?</td><td><code>fixVersion = 1.6 AND statusCategory != Done</code> is empty, or each remaining item is explicitly deferred</td></tr>
+            <tr><td>Are the requirements verified?</td><td>The traceability matrix from the release build: no gaps (deck 09)</td></tr>
+            <tr><td>Does the simulator still agree with its references?</td><td>The validation suite's errors, against the agreed tolerances, from CI</td></tr>
+            <tr><td>Is it as fast as before?</td><td>The performance gate's report (deck 07)</td></tr>
+            <tr><td>What is known to be wrong?</td><td>Open bugs against the release (query 3), each with a stated impact</td></tr>
+        </tbody>
+    </table></div>
+    <ul>
+        <li><strong>Burn-up beats burndown</strong> when scope changes: it shows the scope line moving, rather than hiding new work in a flattening line.</li>
+        <li><strong>A definition of done</strong> written into the workflow (the Validated status of slide 03) makes "done" mean the same thing on every item.</li>
+        <li><strong>Saved filters and dashboards</strong> turn this table into a page that is always current, built from queries anyone can read.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-12">
+    <div class="slide-number">12</div>
+    <h2>What to Take Away</h2>
+    <ul>
+        <li><strong>The issue model is the data model:</strong> types, a workflow with status categories, fix versions, and a full history.</li>
+        <li><strong>JQL makes every board, chart and report a query.</strong> Learn the traps: <code>!=</code> skips empty fields, <code>AND</code> binds tighter than <code>OR</code>, and <code>WAS</code>/<code>CHANGED</code> only work on six fields.</li>
+        <li><strong>Keys in branches and commits</strong> link code, builds and deployments to the work. Smart commits can comment, log time and transition.</li>
+        <li><strong>Report flow, accuracy, coverage, quality and performance</strong>, as distributions, computed by tools.</li>
+        <li><strong>Little's law checks a board:</strong> if WIP is well above throughput &times; cycle time, look for ageing items.</li>
+    </ul>
+    <ul class="res-list">
+        <li><a href="https://support.atlassian.com/jira-software-cloud/docs/use-advanced-search-with-jira-query-language-jql/">Atlassian: advanced search with JQL</a><span class="what">With the field, operator, function and keyword references linked on slide 05.</span></li>
+        <li><a href="https://support.atlassian.com/jira-software-cloud/docs/view-and-understand-the-cumulative-flow-diagram/">Atlassian: the cumulative flow diagram</a><span class="what">How Jira draws the chart on slide 10.</span></li>
+        <li><a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/tree/main/snippets/t08">snippets/t08</a><span class="what">The example issue log, the JQL evaluator and its tests.</span></li>
+        <li><a href="https://github.com/BrendanJamesLynskey/Interview_Technical_Leadership">Interview_Technical_Leadership</a><span class="what">Questions on planning, estimation and reporting.</span></li>
+    </ul>
+</section>
+
+<!-- ════════════════════════════════════ Footer ════════════════════════════════════ -->
+<footer class="footer">
+    <p>Part of the <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit">Simulation Engineering Toolkit series</a> &middot; <a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#glossary">glossary: every concept and where it is explained</a> &middot; code: <a href="https://github.com/BrendanJamesLynskey/Torch_Sim_Frontend">Torch_Sim_Frontend</a></p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem;"><a href="https://brendanjameslynskey.github.io/SimEng_07_Jenkins_for_Simulation_Teams/">&larr; 07 Jenkins for Hardware and Simulation Teams</a> &nbsp;&middot;&nbsp; <a href="https://brendanjameslynskey.github.io/SimEng_09_Specs_Requirements_Test_Plans/">09 Specifications, Requirements and Test Plans &rarr;</a></p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem;">Interview questions: <a href="https://github.com/BrendanJamesLynskey/Interview_Technical_Leadership">Interview_Technical_Leadership</a> &middot; sister series: <a href="https://github.com/BrendanJamesLynskey/LLM_Hub_Inference_Simulators">LLM Inference Simulators</a> &middot; <a href="https://github.com/BrendanJamesLynskey/FHE_Hub_Accelerator_Simulators">FHE Accelerator Simulators</a></p>
+</footer>
+
+<script>
+    // Smooth scroll for TOC links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    // Subtle fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.slide').forEach(slide => {
+        slide.style.opacity = '0';
+        slide.style.transform = 'translateY(30px)';
+        slide.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(slide);
+    });
+</script>
+
+</body>
+</html>
